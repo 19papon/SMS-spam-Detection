@@ -34,32 +34,39 @@ try:
 except FileNotFoundError:
     st.error("Model files not found!")
 
-def update_stats(result_type):
+def update_stats(result_type, is_correction=False):
     filename = 'stats.csv'
     if not os.path.isfile(filename):
-        df_stats = pd.DataFrame([[0, 0]], columns=['Spam', 'Ham'])
+        df_stats = pd.DataFrame([[0, 0, 0]], columns=['Spam', 'Ham', 'Corrections'])
         df_stats.to_csv(filename, index=False)
+    
     df_stats = pd.read_csv(filename)
-    if result_type == 1: df_stats['Spam'] += 1
-    else: df_stats['Ham'] += 1
+    if is_correction:
+        df_stats['Corrections'] += 1
+    else:
+        if result_type == 1: df_stats['Spam'] += 1
+        else: df_stats['Ham'] += 1
     df_stats.to_csv(filename, index=False)
 
 with st.sidebar:
     st.title("Settings")
-    dev_mode = st.checkbox("Enable Developer Mode")
-
-    if dev_mode:
+    password = st.text_input("Developer Access", type="password", help="Only for Papon")
+    
+    if password == "papon786":
+        st.success("Developer Mode Active")
         st.markdown("---")
-        st.title("📊 Admin Dashboard")
+        st.title("📊 Personal Analytics")
         if os.path.isfile('stats.csv'):
-            stats = pd.read_csv('stats.csv')
-            st.metric("Total Spam", stats['Spam'][0])
-            st.metric("Total Safe", stats['Ham'][0])
-            st.bar_chart(pd.DataFrame({'Count': [stats['Spam'][0], stats['Ham'][0]]}, index=['Spam', 'Ham']))
+            stats = pd.read_csv(filename := 'stats.csv')
+            st.metric("Total Spam Detected", stats['Spam'][0])
+            st.metric("Total Safe Detected", stats['Ham'][0])
+            st.metric("User Corrections (Errors)", stats['Corrections'][0], delta_color="inverse")
+            
+            st.bar_chart(pd.DataFrame({'Count': [stats['Spam'][0], stats['Ham'][0], stats['Corrections'][0]]}, 
+                                     index=['Spam', 'Ham', 'Errors']))
     else:
-        st.info("Welcome! Enter your message to check for spam.")
+        st.info("System is running in Public Mode.")
 
-# --- MAIN UI ---
 st.title("🛡️ Smart AI Spam Classifier")
 st.caption("Developed by Papon")
 st.markdown("---")
@@ -96,22 +103,23 @@ if st.button('Analyze Message', type="primary"):
     else:
         st.warning("Please enter a message first.")
 
-if dev_mode:
-    st.markdown("---")
-    st.markdown("### 🤖 Developer Tools: Improve AI")
-    st.write("Correct the model if it makes a mistake:")
-    c1, c2 = st.columns(2)
+st.markdown("---")
+st.markdown("### 🤖 Help the AI Learn")
+st.write("If the result was wrong, please help us improve by clicking below:")
+c1, c2 = st.columns(2)
 
-    with c1:
-        if st.button('❌ Mark as Spam'):
-            if 'last_input' in st.session_state:
-                model.partial_fit(hv.transform([st.session_state['last_input']]), [1])
-                pickle.dump(model, open('online_model.pkl', 'wb'))
-                st.toast("Model updated to Spam!", icon="🔥")
+with c1:
+    if st.button('❌ Mark as Spam'):
+        if 'last_input' in st.session_state:
+            model.partial_fit(hv.transform([st.session_state['last_input']]), [1])
+            pickle.dump(model, open('online_model.pkl', 'wb'))
+            update_stats(None, is_correction=True) 
+            st.toast("Thank you! Model updated.", icon="🔥")
 
-    with c2:
-        if st.button('✔️ Mark as Safe'):
-            if 'last_input' in st.session_state:
-                model.partial_fit(hv.transform([st.session_state['last_input']]), [0])
-                pickle.dump(model, open('online_model.pkl', 'wb'))
-                st.toast("Model updated to Safe!", icon="🌱")
+with c2:
+    if st.button('✔️ Mark as Safe'):
+        if 'last_input' in st.session_state:
+            model.partial_fit(hv.transform([st.session_state['last_input']]), [0])
+            pickle.dump(model, open('online_model.pkl', 'wb'))
+            update_stats(None, is_correction=True) 
+            st.toast("Thank you! Model updated.", icon="🌱")
