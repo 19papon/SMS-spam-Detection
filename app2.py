@@ -35,7 +35,7 @@ except FileNotFoundError:
     st.error("Model files not found!")
 
 def update_stats(result_type, is_correction=False):
-    filename = 'stats.csv'
+    filename = 'status.csv'
     if not os.path.isfile(filename):
         df_stats = pd.DataFrame([[0, 0, 0]], columns=['Spam', 'Ham', 'Corrections'])
         df_stats.to_csv(filename, index=False)
@@ -123,3 +123,4 @@ with c2:
             pickle.dump(model, open('online_model.pkl', 'wb'))
             update_stats(None, is_correction=True) 
             st.toast("Thank you! Model updated.", icon="🌱")
+
