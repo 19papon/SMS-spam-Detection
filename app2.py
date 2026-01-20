@@ -45,15 +45,23 @@ def update_stats(result_type):
     df_stats.to_csv(filename, index=False)
 
 with st.sidebar:
-    st.title("Admin Dashboard")
-    if os.path.isfile('stats.csv'):
-        stats = pd.read_csv('stats.csv')
-        st.metric("Total Spam", stats['Spam'][0])
-        st.metric("Total Safe", stats['Ham'][0])
-        st.bar_chart(pd.DataFrame({'Count': [stats['Spam'][0], stats['Ham'][0]]}, index=['Spam', 'Ham']))
+    st.title("Settings")
+    dev_mode = st.checkbox("Enable Developer Mode")
 
+    if dev_mode:
+        st.markdown("---")
+        st.title("📊 Admin Dashboard")
+        if os.path.isfile('stats.csv'):
+            stats = pd.read_csv('stats.csv')
+            st.metric("Total Spam", stats['Spam'][0])
+            st.metric("Total Safe", stats['Ham'][0])
+            st.bar_chart(pd.DataFrame({'Count': [stats['Spam'][0], stats['Ham'][0]]}, index=['Spam', 'Ham']))
+    else:
+        st.info("Welcome! Enter your message to check for spam.")
+
+# --- MAIN UI ---
 st.title("🛡️ Smart AI Spam Classifier")
-st.caption("Developed by  Papon")
+st.caption("Developed by Papon")
 st.markdown("---")
 
 col_header, col_clear = st.columns([8, 2])
@@ -88,20 +96,22 @@ if st.button('Analyze Message', type="primary"):
     else:
         st.warning("Please enter a message first.")
 
-st.markdown("---")
-st.markdown("### 🤖 Help the AI Improve")
-c1, c2 = st.columns(2)
+if dev_mode:
+    st.markdown("---")
+    st.markdown("### 🤖 Developer Tools: Improve AI")
+    st.write("Correct the model if it makes a mistake:")
+    c1, c2 = st.columns(2)
 
-with c1:
-    if st.button('❌ Wrong! It was Spam'):
-        if 'last_input' in st.session_state:
-            model.partial_fit(hv.transform([st.session_state['last_input']]), [1])
-            pickle.dump(model, open('online_model.pkl', 'wb'))
-            st.toast("Updated: Marked as Spam", icon="🔥")
+    with c1:
+        if st.button('❌ Mark as Spam'):
+            if 'last_input' in st.session_state:
+                model.partial_fit(hv.transform([st.session_state['last_input']]), [1])
+                pickle.dump(model, open('online_model.pkl', 'wb'))
+                st.toast("Model updated to Spam!", icon="🔥")
 
-with c2:
-    if st.button('✔️ Wrong! It was Safe'):
-        if 'last_input' in st.session_state:
-            model.partial_fit(hv.transform([st.session_state['last_input']]), [0])
-            pickle.dump(model, open('online_model.pkl', 'wb'))
-            st.toast("Updated: Marked as Safe", icon="🌱")
+    with c2:
+        if st.button('✔️ Mark as Safe'):
+            if 'last_input' in st.session_state:
+                model.partial_fit(hv.transform([st.session_state['last_input']]), [0])
+                pickle.dump(model, open('online_model.pkl', 'wb'))
+                st.toast("Model updated to Safe!", icon="🌱")
