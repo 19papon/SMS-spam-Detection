@@ -8,8 +8,8 @@ from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 
 st.set_page_config(page_title="Smart Spam Detector", page_icon="🛡️", layout="wide")
-
 nltk.download('punkt')
+nltk.download('punkt_tab') 
 nltk.download('stopwords')
 
 ps = PorterStemmer()
@@ -123,5 +123,6 @@ with c2:
             pickle.dump(model, open('online_model.pkl', 'wb'))
             update_stats(None, is_correction=True) 
             st.toast("Thank you! Model updated.", icon="🌱")
+
 
 
