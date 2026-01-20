@@ -56,8 +56,8 @@ with st.sidebar:
         st.success("Developer Mode Active")
         st.markdown("---")
         st.title("📊 Personal Analytics")
-        if os.path.isfile('stats.csv'):
-            stats = pd.read_csv(filename := 'stats.csv')
+        if os.path.isfile('status.csv'):
+            stats = pd.read_csv(filename := 'status.csv')
             st.metric("Total Spam Detected", stats['Spam'][0])
             st.metric("Total Safe Detected", stats['Ham'][0])
             st.metric("User Corrections (Errors)", stats['Corrections'][0], delta_color="inverse")
@@ -123,4 +123,5 @@ with c2:
             pickle.dump(model, open('online_model.pkl', 'wb'))
             update_stats(None, is_correction=True) 
             st.toast("Thank you! Model updated.", icon="🌱")
+
 
